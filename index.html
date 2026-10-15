@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro A 肌膚檢測儀考卷</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,"Noto Sans TC",sans-serif;background:#F5F5F3;color:#1A1A1A;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.header{background:#fff;border:0.5px solid #E0DED8;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.timer-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.timer{font-size:22px;font-weight:500;color:#1A1A1A;font-variant-numeric:tabular-nums}
+.timer.warn{color:#E24B4A}
+.progress-bar{height:4px;background:#E0DED8;border-radius:2px;margin-top:8px}
+.progress-fill{height:4px;background:#1A5276;border-radius:2px;transition:width 0.3s}
+.progress-fill.warn{background:#E24B4A}
+.q-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.q-dot{width:30px;height:30px;border-radius:50%;border:0.5px solid #C8C6C0;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6B6A66;background:#fff;transition:all 0.15s}
+.q-dot.active{background:#1A5276;color:#fff;border-color:#1A5276}
+.q-dot.answered{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+.q-dot.answered.active{background:#1A5276;color:#fff;border-color:#1A5276}
+.card{background:#fff;border:0.5px solid #E0DED8;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem}
+.q-label{font-size:11px;font-weight:500;color:#1A5276;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.q-score{font-size:11px;font-weight:500;color:#888780;margin-bottom:6px;float:right}
+.q-text{font-size:15px;font-weight:500;color:#1A1A1A;line-height:1.55;margin-bottom:1rem;clear:both}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid #E0DED8;border-radius:8px;margin-bottom:8px;cursor:pointer;transition:all 0.15s;background:#fff}
+.opt:hover{border-color:#2E86C1;background:#EBF5FB}
+.opt.selected{border-color:#2E86C1;background:#D6EAF8}
+.opt.correct{border-color:#639922;background:#EAF3DE}
+.opt.wrong{border-color:#E24B4A;background:#FCEBEB}
+.opt-circle{width:22px;height:22px;border-radius:50%;border:1.5px solid #C8C6C0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#6B6A66;margin-top:1px}
+.opt.selected .opt-circle{border-color:#2E86C1;color:#1A5276;background:#fff}
+.opt.correct .opt-circle{border-color:#639922;color:#3B6D11;background:#fff}
+.opt.wrong .opt-circle{border-color:#E24B4A;color:#A32D2D;background:#fff}
+.opt-text{font-size:14px;color:#1A1A1A;line-height:1.5}
+.multi-hint{font-size:12px;color:#888780;margin-bottom:10px}
+.btn-row{display:flex;gap:8px;margin-top:1rem}
+button.primary{flex:1;padding:11px;border-radius:8px;border:0.5px solid #2E86C1;background:#1A5276;color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+button.secondary{flex:1;padding:11px;border-radius:8px;border:0.5px solid #C8C6C0;background:#fff;color:#1A1A1A;font-size:14px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.field-label{font-size:12px;color:#6B6A66;margin-bottom:5px;font-weight:500}
+.field-input{width:100%;padding:10px 12px;border:0.5px solid #C8C6C0;border-radius:8px;font-size:14px;color:#1A1A1A;background:#fff;margin-bottom:14px;outline:none}
+.field-input:focus{border-color:#2E86C1}
+.info-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.25rem}
+.info-item{background:#F5F5F3;border-radius:8px;padding:12px;text-align:center}
+.info-val{font-size:20px;font-weight:500;color:#1A1A1A}
+.info-lab{font-size:11px;color:#888780;margin-top:2px}
+.start-title{font-size:20px;font-weight:500;margin-bottom:4px;color:#1A1A1A}
+.start-sub{font-size:13px;color:#888780;margin-bottom:1.25rem;line-height:1.6}
+.result-card{background:#fff;border:0.5px solid #E0DED8;border-radius:12px;padding:1rem 1.25rem;margin-bottom:8px;text-align:left}
+.result-q{font-size:13px;font-weight:500;color:#1A1A1A;margin-bottom:4px}
+.result-ans{font-size:12px;color:#888780;margin-bottom:4px}
+.result-status{font-size:12px}
+.r-correct{color:#3B6D11}
+.r-partial{color:#B7791F}
+.r-wrong{color:#A32D2D}
+.score-circle{width:110px;height:110px;border-radius:50%;border:3px solid #1A5276;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1rem}
+.score-num{font-size:28px;font-weight:500;color:#1A5276}
+.score-sub{font-size:12px;color:#888780}
+.meta-bar{font-size:12px;color:#888780;margin-bottom:1.25rem}
+.pass-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:500;margin-bottom:1.25rem}
+.pass-badge.pass{background:#EAF3DE;color:#3B6D11}
+.pass-badge.fail{background:#FCEBEB;color:#A32D2D}
+.score-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.5rem}
+.breakdown-item{background:#F5F5F3;border-radius:8px;padding:10px;text-align:center}
+.breakdown-val{font-size:16px;font-weight:500;color:#1A1A1A}
+.breakdown-lab{font-size:11px;color:#888780;margin-top:2px}
+.part-label{font-size:12px;font-weight:500;color:#888780;margin:1rem 0 0.5rem;padding-left:4px}
+.correct-ans-box{margin-top:8px;padding:8px 10px;background:#EBF5FB;border-radius:6px;border:0.5px solid #AED6F1;font-size:12px;color:#1A5276;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="app"></div>
+</div>
+
+<script>
+const EXAM_TITLE = "Pro A 旗艦機 肌膚檢測儀";
+const TOTAL_SECS = 15 * 60;
+const PASS_SCORE = 80;
+
+const PARTS = [
+  {key:"part1", label:"Part 1｜症狀分析與光譜", short:"Part 1 症狀與光譜", from:0, to:7},
+  {key:"part2", label:"Part 2｜特殊分析", short:"Part 2 特殊分析", from:7, to:10},
+  {key:"part3", label:"Part 3｜業務應用", short:"Part 3 業務應用", from:10, to:15}
+];
+
+const questions = [
+  {
+    id:1, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"下列何者「不屬於」Pro A 的 5 大症狀分析？",
+    opts:["衰老分析","敏感分析","毛髮分析","色素分析"],
+    answer:[2],
+    explanation:"Pro A 的 5 大症狀分析為：衰老分析、敏感分析、色素分析、肌膚分析、膚色分析，不包含毛髮分析。（出處：第 9 頁）"
+  },
+  {
+    id:2, part:"Part 1｜症狀分析與光譜", type:"match", points:16,
+    text:"請為下列皮膚現象，配對正確的分析類別（有一個類別不會用到）。",
+    items:["肝斑","粉刺","法令紋","酒糟"],
+    opts:["衰老分析","敏感分析","色素分析","肌膚分析","膚色分析"],
+    answer:[2,3,0,1],
+    explanation:"肝斑 → 色素分析；粉刺 → 肌膚分析；法令紋 → 衰老分析；酒糟 → 敏感分析。膚色分析不會用到。（出處：第 9 頁）"
+  },
+  {
+    id:3, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"Pro A 肌膚檢測儀有幾種光譜？",
+    opts:["2 種","3 種","4 種","8 種"],
+    answer:[2],
+    explanation:"Pro A 共有 4 種光譜：自然光、平行偏振光、UV 光（365nm）、交叉偏振光。（出處：第 10、11 頁）"
+  },
+  {
+    id:4, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"自然光的主要作用是？",
+    opts:["模擬日光下皮膚的真實狀態","觀察深層色斑","檢測皮膚缺水","觀察紅血絲"],
+    answer:[0],
+    explanation:"自然光用來模擬日光下皮膚的真實狀態。（出處：第 11 頁）"
+  },
+  {
+    id:5, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"平行偏振光主要用來觀察哪些問題？",
+    opts:["紅血絲、敏感","毛孔、皺紋、表皮","深斑、粉刺","皮膚缺水、代謝"],
+    answer:[1],
+    explanation:"平行偏振光主要用來觀察毛孔、皺紋、表皮。（出處：第 11 頁）"
+  },
+  {
+    id:6, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"UV 光（波長 365nm）主要用來觀察哪些問題？",
+    opts:["毛孔、皺紋","紅血絲、敏感","深斑、粉刺、皮膚缺水、代謝／老化","模擬日光下的膚色"],
+    answer:[2],
+    explanation:"UV 光（365nm）主要用來觀察深斑、粉刺、皮膚缺水、代謝／老化。（出處：第 11 頁）"
+  },
+  {
+    id:7, part:"Part 1｜症狀分析與光譜", type:"single", points:6,
+    text:"交叉偏振光主要用來觀察哪些問題？",
+    opts:["表皮、紅血絲、敏感、色素","毛孔、皺紋","粉刺、代謝","化妝品殘留"],
+    answer:[0],
+    explanation:"交叉偏振光主要用來觀察表皮、紅血絲、敏感、色素。（出處：第 11 頁）"
+  },
+  {
+    id:8, part:"Part 2｜特殊分析", type:"single", points:6,
+    text:"在 UV 光模式下，可以觀察到下列哪一種情況？",
+    opts:["化妝品殘留、卸妝不完全","客戶的實際年齡","皮膚的溫度","客戶的過敏原種類"],
+    answer:[0],
+    explanation:"UV 光模式下可以觀察到化妝品殘留、卸妝不完全的情況。（出處：第 24 頁）"
+  },
+  {
+    id:9, part:"Part 2｜特殊分析", type:"single", points:6,
+    text:"UV 光模式下可看到荷爾蒙造成的皮膚深層絨毛，下列敘述何者正確？",
+    opts:["用洗面乳洗臉即可洗掉","洗不掉，但可以代謝掉","永久無法消除","只會出現在頭髮上"],
+    answer:[1],
+    explanation:"荷爾蒙造成的皮膚深層絨毛洗不掉，但可以代謝掉。（出處：第 22 頁）"
+  },
+  {
+    id:10, part:"Part 2｜特殊分析", type:"single", points:6,
+    text:"客戶的 UV 光影像出現大量異常螢光，業務最恰當的說法是？",
+    opts:["「機器顯示你重金屬中毒了。」","「你這是激素性皮膚炎，要馬上治療。」","「影像有異常反應，可能和保養品殘留有關，建議進一步諮詢醫師。」","「機器已經確診你的皮膚疾病。」"],
+    answer:[2],
+    explanation:"肌膚檢測儀僅提供影像參考、不作診斷，業務不可替客戶下診斷，應說明可能原因並建議諮詢醫師。"
+  },
+  {
+    id:11, part:"Part 3｜業務應用", type:"single", points:6,
+    text:"下列何者「不是」肌膚檢測儀能為客戶帶來的價值？",
+    opts:["用科學儀器提高顧客對皮膚的認識","直觀的畫面分析，方便與客戶溝通","直接治療客戶的皮膚問題","持續追蹤治療結果和進展"],
+    answer:[2],
+    explanation:"肌膚檢測儀是檢測與溝通工具，無法直接治療皮膚問題。（出處：第 6 頁）"
+  },
+  {
+    id:12, part:"Part 3｜業務應用", type:"single", points:6,
+    text:"業務向客戶展示「治療前後對比」，主要能達到什麼效果？",
+    opts:["降低儀器的檢測時間","提高顧客的信任度，增加成交的機率","取代美容師的專業判斷","減少客戶回診次數"],
+    answer:[1],
+    explanation:"治療前後對比能提高顧客的信任度，增加成交的機率。（出處：第 27 頁）"
+  },
+  {
+    id:13, part:"Part 3｜業務應用", type:"single", points:6,
+    text:"「共享數據資料」功能最適合推薦給哪一類客戶？",
+    opts:["只有一位美容師的個人工作室","連鎖體系或跨國大型醫美事業體","一般家庭自用","化妝品零售通路"],
+    answer:[1],
+    explanation:"「共享數據資料」最適合連鎖體系或跨國大型醫美事業體。（出處：第 32 頁）"
+  },
+  {
+    id:14, part:"Part 3｜業務應用", type:"single", points:6,
+    text:"下列哪一項「不是」Pro A 的產品賣點？",
+    opts:["免安裝，插電即可使用","機身專屬 1200 萬畫素相機","隱藏式遮光罩，卡扣式設計","需專業技師到府組裝校正"],
+    answer:[3],
+    explanation:"Pro A 免安裝、插電即可使用，不需專業技師到府組裝校正。（出處：第 3–5 頁）"
+  },
+  {
+    id:15, part:"Part 3｜業務應用", type:"single", points:6,
+    text:"客戶的紅素圖分數是 25 分，業務應如何解讀？",
+    opts:["輕度敏感","中度敏感","重度敏感","皮膚健康，無敏感問題"],
+    answer:[2],
+    explanation:"紅素圖 0–33 分為重度敏感，分數越低越嚴重，25 分屬重度敏感。（出處：第 19 頁）"
+  }
+];
+
+const L=n=>String.fromCharCode(65+n);
+
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+}
+
+let state={
+  phase:"start", name:"", branch:"", position:"", positionOther:"", date:todayStr(), formError:{},
+  current:0, answers:Array(questions.length).fill(null),
+  submitted:Array(questions.length).fill(false),
+  timeLeft:TOTAL_SECS, timerInterval:null, finished:false
+};
+
+function fmt(s){const m=Math.floor(s/60),sec=s%60;return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+
+function startTimer(){
+  state.timerInterval=setInterval(()=>{
+    if(state.finished)return;
+    state.timeLeft--;
+    if(state.timeLeft<=0){clearInterval(state.timerInterval);state.timeLeft=0;finishQuiz();}
+    renderHeader();
+  },1000);
+}
+
+function finishQuiz(){state.finished=true;state.phase="result";clearInterval(state.timerInterval);render();}
+
+// 計分：單選題全對才給分；配對題每組配對正確得 q.points/組數 分（本卷每組 4 分）。
+function qPoints(i){
+  const q=questions[i];
+  const ans=state.answers[i];
+  if(!ans||ans.length===0)return 0;
+  if(q.type==="match"){
+    const per=q.points/q.answer.length;
+    const n=q.answer.filter((a,k)=>ans[k]===a).length;
+    return Math.round(per*n*100)/100;
+  }
+  return isQCorrect(i)?q.points:0;
+}
+
+function calcScore(){
+  let total=0;
+  questions.forEach((q,i)=>{total+=qPoints(i);});
+  return Math.round(total*100)/100;
+}
+
+function partScore(p){
+  let s=0;for(let i=p.from;i<p.to;i++)s+=qPoints(i);
+  return Math.round(s*100)/100;
+}
+function partMax(p){
+  return questions.slice(p.from,p.to).reduce((s,q)=>s+q.points,0);
+}
+
+function isQAnswered(i){
+  const ans=state.answers[i];
+  if(!ans)return false;
+  if(questions[i].type==="match")return ans.some(a=>a!==null&&a!==undefined);
+  return ans.length>0;
+}
+
+function isQComplete(i){
+  const ans=state.answers[i];
+  if(!ans)return false;
+  if(questions[i].type==="match")return ans.every(a=>a!==null&&a!==undefined);
+  return ans.length>0;
+}
+
+function isQCorrect(i){
+  const ans=state.answers[i];
+  const q=questions[i];
+  if(!ans||ans.length===0)return false;
+  if(q.type==="match")return q.answer.every((a,k)=>ans[k]===a);
+  return q.answer.slice().sort().join(",")===ans.slice().sort().join(",");
+}
+
+function ansToText(q,ans){
+  if(q.type==="match"){
+    return q.items.map((it,k)=>"("+(k+1)+")"+(ans[k]===null||ans[k]===undefined?"—":L(ans[k]))).join(" ");
+  }
+  return ans.map(a=>L(a)).join("、");
+}
+
+function renderHeader(){
+  const h=document.getElementById("quiz-header");
+  if(!h)return;
+  const pct=(state.timeLeft/TOTAL_SECS)*100;
+  const warn=state.timeLeft<120;
+  h.querySelector(".timer").textContent=fmt(state.timeLeft);
+  h.querySelector(".timer").className="timer"+(warn?" warn":"");
+  h.querySelector(".progress-fill").style.width=pct+"%";
+  h.querySelector(".progress-fill").className="progress-fill"+(warn?" warn":"");
+}
+
+function render(){
+  const app=document.getElementById("app");
+  if(state.phase==="start"){app.innerHTML=renderStart();return;}
+  if(state.phase==="result"){app.innerHTML=renderResult();return;}
+  app.innerHTML=renderQuiz();
+}
+
+function renderStart(){
+  const e=state.formError||{};
+  function errMsg(f){return e[f]?'<div style="font-size:12px;color:#A32D2D;margin-top:-10px;margin-bottom:10px;">⚠ '+e[f]+'</div>':"";}
+  function hErr(f){return e[f]?"border-color:#E24B4A;":"";}
+  const totalPts=questions.reduce((s,q)=>s+q.points,0);
+  return '<div class="card">'
+    +'<div class="start-title">'+EXAM_TITLE+'</div>'
+    +'<div class="start-sub">課後線上測驗｜請填寫基本資料後開始作答</div>'
+    +'<div class="field-label">姓名 <span style="color:#E24B4A">*</span></div>'
+    +'<input class="field-input" id="inp-name" type="text" placeholder="請輸入姓名" value="'+state.name+'" style="'+hErr('name')+'">'
+    +errMsg('name')
+    +'<div class="field-label">分院 <span style="color:#E24B4A">*</span></div>'
+    +'<select class="field-input" id="inp-branch" style="cursor:pointer;'+hErr('branch')+'">'
+    +'<option value=""'+(state.branch?"":" selected")+'>請選擇分院</option>'
+    +'<option value="台北"'+(state.branch==="台北"?" selected":"")+'>台北</option>'
+    +'<option value="台中"'+(state.branch==="台中"?" selected":"")+'>台中</option>'
+    +'<option value="高雄"'+(state.branch==="高雄"?" selected":"")+'>高雄</option>'
+    +'</select>'
+    +errMsg('branch')
+    +'<div class="field-label">職位 <span style="color:#E24B4A">*</span></div>'
+    +'<select class="field-input" id="inp-position" style="cursor:pointer;'+hErr('position')+'" onchange="toggleOtherPosition()">'
+    +'<option value=""'+(state.position?"":" selected")+'>請選擇職位</option>'
+    +'<option value="櫃檯"'+(state.position==="櫃檯"?" selected":"")+'>櫃檯</option>'
+    +'<option value="諮詢師"'+(state.position==="諮詢師"?" selected":"")+'>諮詢師</option>'
+    +'<option value="美容師"'+(state.position==="美容師"?" selected":"")+'>美容師</option>'
+    +'<option value="護理師"'+(state.position==="護理師"?" selected":"")+'>護理師</option>'
+    +'<option value="其他"'+(state.position==="其他"?" selected":"")+'>其他</option>'
+    +'</select>'
+    +errMsg('position')
+    +'<div id="other-position-wrap" style="display:'+(state.position==="其他"?"block":"none")+';margin-top:-8px;">'
+    +'<input class="field-input" id="inp-position-other" type="text" placeholder="請填寫你的職位" value="'+state.positionOther+'" style="'+hErr('positionOther')+'">'
+    +errMsg('positionOther')
+    +'</div>'
+    +'<div class="field-label">日期 <span style="color:#E24B4A">*</span></div>'
+    +'<input class="field-input" id="inp-date" type="date" value="'+state.date.replace(/\//g,'-')+'" style="'+hErr('date')+'">'
+    +errMsg('date')
+    +'<div class="info-row">'
+    +'<div class="info-item"><div class="info-val">'+questions.length+'</div><div class="info-lab">題目數量</div></div>'
+    +'<div class="info-item"><div class="info-val">'+totalPts+'</div><div class="info-lab">總分</div></div>'
+    +'<div class="info-item"><div class="info-val">'+fmt(TOTAL_SECS)+'</div><div class="info-lab">限制時間</div></div>'
+    +'</div>'
+    +'<div style="background:#EAF3DE;border-radius:8px;padding:10px 14px;margin-bottom:1.25rem;font-size:13px;color:#3B6D11;">✓ 合格標準：<strong>'+PASS_SCORE+' 分以上（含）</strong>即為通過</div>'
+    +'<div style="margin-bottom:1.25rem">'
+    +'<div style="font-size:13px;font-weight:500;color:#1A1A1A;margin-bottom:8px">配分說明</div>'
+    +'<div style="font-size:13px;color:#6B6A66;line-height:2">'
+    +'Part 1 症狀分析與光譜（Q1–Q7）共 52 分<br>'
+    +'<span style="padding-left:1em">└ 單選題每題 6 分；Q2 配對題 16 分（每組 4 分）</span><br>'
+    +'Part 2 特殊分析（Q8–Q10）每題 6 分，共 18 分<br>'
+    +'Part 3 業務應用（Q11–Q15）每題 6 分，共 30 分'
+    +'</div>'
+    +'</div>'
+    +'<button class="primary" style="width:100%;margin-top:4px" onclick="startQuiz()">開始考試</button>'
+    +'</div>';
+}
+
+function toggleOtherPosition(){
+  const sel=document.getElementById("inp-position");
+  const wrap=document.getElementById("other-position-wrap");
+  if(wrap)wrap.style.display=sel&&sel.value==="其他"?"block":"none";
+}
+
+function startQuiz(){
+  const name=document.getElementById("inp-name").value.trim();
+  const branch=document.getElementById("inp-branch").value;
+  const position=document.getElementById("inp-position").value;
+  const positionOther=(document.getElementById("inp-position-other")||{}).value||"";
+  const dateVal=document.getElementById("inp-date").value;
+  const err={};
+  if(!name)err.name="請輸入姓名";
+  if(!branch)err.branch="請選擇分院";
+  if(!position)err.position="請選擇職位";
+  if(position==="其他"&&!positionOther.trim())err.positionOther="請填寫職位";
+  if(!dateVal)err.date="請選擇日期";
+  state.formError=err;
+  if(Object.keys(err).length>0){render();return;}
+  state.name=name;state.branch=branch;state.position=position;state.positionOther=positionOther;
+  state.date=dateVal.replace(/-/g,"/");
+  state.phase="quiz";render();startTimer();
+}
+
+function renderMatch(q,ans,done){
+  const legend='<div style="background:#F5F5F3;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#1A1A1A;line-height:1.9">'
+    +'<div style="font-size:12px;color:#888780;margin-bottom:2px">分析類別</div>'
+    +q.opts.map((o,j)=>L(j)+'. '+o).join('<br>')+'</div>';
+  const rows=q.items.map((it,k)=>{
+    const v=ans[k];
+    const options='<option value=""'+(v===null||v===undefined?" selected":"")+'>請選擇</option>'
+      +q.opts.map((o,j)=>'<option value="'+j+'"'+(v===j?" selected":"")+'>'+L(j)+'. '+o+'</option>').join("");
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid #E0DED8;border-radius:8px;margin-bottom:8px">'
+      +'<div style="flex:1;font-size:14px">('+(k+1)+') '+it+'</div>'
+      +'<select class="field-input" style="width:auto;min-width:150px;margin:0;cursor:pointer" '+(done?"disabled":"")+' onchange="setMatch('+k+',this.value)">'+options+'</select>'
+      +'</div>';
+  }).join("");
+  return '<div class="multi-hint">（配對題，請為每個皮膚現象選擇分析類別；每組 4 分）</div>'+legend+rows;
+}
+
+function renderQuiz(){
+  const i=state.current;
+  const q=questions[i];
+  const ans=state.answers[i]||[];
+  const done=state.submitted[i];
+
+  const nav='<div class="q-nav">'+questions.map((_,j)=>{
+    let cls="q-dot";
+    if(j===i)cls+=" active";
+    else if(isQAnswered(j))cls+=" answered";
+    return `<div class="${cls}" onclick="goQ(${j})">${j+1}</div>`;
+  }).join("")+'</div>';
+
+  const header=`<div class="header" id="quiz-header">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;font-weight:500;color:#1A1A1A">${EXAM_TITLE}</div>
+      <div style="font-size:12px;color:#888780">${state.name} ｜ ${state.branch}</div>
+    </div>
+    <div class="timer-row">
+      <div style="font-size:13px;color:#888780">剩餘時間</div>
+      <div class="timer">${fmt(state.timeLeft)}</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${(state.timeLeft/TOTAL_SECS)*100}%"></div></div>
+  </div>`;
+
+  let body;
+  if(q.type==="match"){
+    body=renderMatch(q,ans,done);
+  }else{
+    const multiHint=q.type==="multi"?'<div class="multi-hint">（複選題，請選出所有正確答案）</div>':"";
+    body=multiHint+q.opts.map((opt,j)=>{
+      let cls="opt";
+      if(ans.includes(j))cls+=" selected";
+      return `<div class="${cls}" onclick="toggleOpt(${j})">
+        <div class="opt-circle">${L(j)}</div>
+        <div class="opt-text">${opt}</div>
+      </div>`;
+    }).join("");
+  }
+
+  const complete=isQComplete(i);
+  const btnRow=`<div class="btn-row">
+    <button class="secondary" onclick="goQ(${i-1})" ${i===0?"disabled":""}>上一題</button>
+    ${!done
+      ?`<button class="primary" onclick="submitQ()" ${!complete?"disabled":""}>確認答案</button>`
+      :`<button class="secondary" onclick="changeAnswer()" style="border-color:#2E86C1;color:#1A5276;">修改答案</button>`
+    }
+    ${i<questions.length-1?`<button class="primary" onclick="goQ(${i+1})">下一題</button>`:`<button class="primary" onclick="finishQuiz()">交卷</button>`}
+  </div>`;
+
+  return header+nav+`<div class="card">
+    <div style="overflow:hidden">
+      <div class="q-label">${q.part}</div>
+      <div class="q-score">${q.points} 分</div>
+    </div>
+    <div class="q-text">Q${i+1}. ${q.text}</div>
+    ${body}${btnRow}
+  </div>`;
+}
+
+function renderResult(){
+  const score=calcScore();
+  const passed=score>=PASS_SCORE;
+
+  function renderPart(p,showCorrect){
+    return `<div class="part-label">${p.label}</div>`+questions.slice(p.from,p.to).map((q,j)=>{
+      const idx=p.from+j;
+      const earned=qPoints(idx);
+      const full=q.points;
+      const ans=state.answers[idx];
+      let ansText="（未作答）";
+      if(isQAnswered(idx))ansText="你的答案："+ansToText(q,ans);
+      const corrText="正確答案："+ansToText(q,q.answer);
+      let statusClass,statusText;
+      if(earned>=full&&earned>0){statusClass="r-correct";statusText="✓ 答對（+"+full+" 分）";}
+      else if(earned>0){statusClass="r-partial";statusText="◐ 部分正確（+"+earned+" 分）";}
+      else{statusClass="r-wrong";statusText="✗ 答錯（0 分）";}
+      return `<div class="result-card">
+        <div class="result-q">Q${idx+1}. ${q.text}</div>
+        <div class="result-ans">${ansText}${showCorrect?"　"+corrText:""}</div>
+        ${showCorrect&&earned<full?`<div style="font-size:12px;color:#888780;margin-bottom:4px">${q.explanation}</div>`:""}
+        <div class="result-status ${statusClass}">${statusText}</div>
+      </div>`;
+    }).join("");
+  }
+
+  const displayPosition=state.position==="其他"?state.positionOther:state.position;
+
+  const scoreHeader=`<div style="text-align:center;padding:1rem 0">
+    <div style="font-size:17px;font-weight:500;margin-bottom:2px;color:#1A1A1A">考試結果</div>
+    <div class="meta-bar">${state.name} ｜ ${state.branch} ｜ ${displayPosition} ｜ ${state.date}</div>
+    <div class="score-circle">
+      <div class="score-num">${score}</div>
+      <div class="score-sub">/ 100 分</div>
+    </div>
+    <div><span class="pass-badge ${passed?"pass":"fail"}">${passed?"✓ 恭喜通過！":"✗ 未達合格標準"}</span></div>
+    <div style="font-size:13px;color:#888780;margin-bottom:1.25rem">${passed?"表現優秀，合格分數 "+PASS_SCORE+" 分，繼續保持！":"合格分數為 "+PASS_SCORE+" 分，建議再複習後重新作答。"}</div>
+    <div class="score-breakdown">
+      ${PARTS.map(p=>`<div class="breakdown-item"><div class="breakdown-val">${partScore(p)} / ${partMax(p)}</div><div class="breakdown-lab">${p.short}</div></div>`).join("")}
+    </div>
+  </div>`;
+
+  if(passed){
+    return scoreHeader
+      +PARTS.map(p=>renderPart(p,true)).join("")
+      +`<div id="submit-area" style="margin-top:0.5rem">
+    <div style="background:#FAEEDA;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#854F0B;">
+      ⚠ 請務必點擊下方按鈕提交成績，否則成績將不會被記錄！
+    </div>
+    <button class="primary" id="submit-btn" style="width:100%;background:#3B6D11;border-color:#3B6D11;" onclick="submitScore()">📤 提交成績到系統</button>
+    <div id="submit-msg" style="margin-top:8px;font-size:13px;text-align:center;"></div>
+  </div>
+  <div id="retry-area" style="display:none;margin-top:0.5rem">
+    <button class="primary" style="width:100%" onclick="resetQuiz()">重新考試</button>
+  </div>`;
+  } else {
+    return scoreHeader
+      +PARTS.map(p=>renderPart(p,false)).join("")
+      +`<div style="margin-top:0.5rem">
+    <button class="primary" style="width:100%;background:#E24B4A;border-color:#E24B4A;" onclick="resetQuiz()">🔄 重考</button>
+  </div>`;
+  }
+}
+
+function goQ(idx){if(idx<0||idx>=questions.length)return;state.current=idx;render();}
+
+function toggleOpt(j){
+  const i=state.current;
+  if(state.submitted[i])return;
+  const q=questions[i];
+  let ans=state.answers[i]||[];
+  if(q.type==="single")ans=[j];
+  else ans=ans.includes(j)?ans.filter(x=>x!==j):[...ans,j];
+  state.answers[i]=ans;
+  render();
+}
+
+function setMatch(k,val){
+  const i=state.current;
+  if(state.submitted[i])return;
+  const q=questions[i];
+  const ans=(state.answers[i]||Array(q.items.length).fill(null)).slice();
+  ans[k]=val===""?null:Number(val);
+  state.answers[i]=ans;
+  render();
+}
+
+function submitQ(){state.submitted[state.current]=true;render();}
+
+function changeAnswer(){state.submitted[state.current]=false;state.answers[state.current]=null;render();}
+
+function resetQuiz(){
+  clearInterval(state.timerInterval);
+  state={phase:"start",name:state.name,branch:state.branch,position:state.position,positionOther:state.positionOther,date:state.date,current:0,
+    answers:Array(questions.length).fill(null),submitted:Array(questions.length).fill(false),
+    timeLeft:TOTAL_SECS,timerInterval:null,finished:false,formError:{}};
+  render();
+}
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbynbW_zsXH7a64ecCq-SsPTtmHw4tRa-H3Mg-5F_XzrbZFA6Jhg3IrqvtQzRAIiJxBAGg/exec";
+
+function submitScore(){
+  const score=calcScore();
+  const passed=score>=PASS_SCORE;
+
+  const answerLabels=questions.map((q,i)=>{
+    if(!isQAnswered(i))return "未作答";
+    const earned=qPoints(i);
+    const full=q.points;
+    const mark=earned>=full?" ✓":(earned>0?` ◐(+${earned})`:" ✗");
+    return ansToText(q,state.answers[i])+mark;
+  });
+
+  const btn=document.getElementById("submit-btn");
+  const msg=document.getElementById("submit-msg");
+  btn.disabled=true;btn.textContent="提交中…";
+  msg.style.color="#888780";msg.textContent="正在傳送資料，請稍候…";
+
+  const displayPosition=state.position==="其他"?state.positionOther:state.position;
+  const payload={
+    examName:"ProA_SkinAnalyzer",
+    name:state.name,branch:state.branch,position:displayPosition,date:state.date,
+    totalScore:score,passed,
+    part1Score:partScore(PARTS[0]),part2Score:partScore(PARTS[1]),part3Score:partScore(PARTS[2]),
+    answers:answerLabels
+  };
+
+  fetch(APPS_SCRIPT_URL,{
+    method:"POST",mode:"no-cors",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  })
+  .then(()=>{
+    document.getElementById("submit-area").innerHTML=
+      '<div style="background:#EAF3DE;border-radius:8px;padding:14px;text-align:center;font-size:14px;color:#3B6D11;font-weight:500;">'
+      +'✅ 成績已成功提交！已記錄至「'+state.branch+'-'+payload.examName+'」分頁。</div>';
+    document.getElementById("retry-area").style.display="block";
+  })
+  .catch(()=>{
+    btn.disabled=false;btn.textContent="📤 提交成績到系統";
+    msg.style.color="#A32D2D";msg.textContent="⚠ 提交失敗，請確認網路連線後再試。";
+  });
+}
+
+render();
+</script>
+</body>
+</html>
